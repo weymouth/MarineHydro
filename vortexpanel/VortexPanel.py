@@ -9,15 +9,20 @@ Classes:
 
 Methods:
     panelize, concatenate
-    make_ellipse, make_circle, make_jfoil
+    make_ellipse, make_circle, make_jfoil, make_spline
 
 Imports:
     numpy, pyplot from matplotlib, march & sep from BoundaryLayer
 """
+import os
+import sys
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
 
 import numpy as np
 from matplotlib import pyplot as plt
-import BoundaryLayer as bl
+from vortexpanel import BoundaryLayer as bl
 
 ### Fundamentals
 
@@ -42,7 +47,7 @@ class Panel(object):
         Outputs:
         A Panel object.
 
-        Examples:
+        Example:
         p_1 = vp.Panel(-1,0,1,0)    # make panel on x-axis with gamma=0
         p_2 = vp.Panel(0,-1,0,1,4)  # make panel on y-axis with gamma=4
         """
@@ -50,8 +55,12 @@ class Panel(object):
         self.gamma = gamma; self._gamma = (gamma,gamma) # copy gamma
         self.xc = 0.5*(x0+x1); self.yc = 0.5*(y0+y1)    # panel center
         dx = x1-self.xc; dy = y1-self.yc
-        self.S = np.sqrt(dx**2+dy**2)                # half-width
+        self.S = np.sqrt(dx**2+dy**2)                   # half-width
         self.sx = dx/self.S; self.sy = dy/self.S        # tangent
+        if np.isclose(self.S,0):                        # check panel size
+            raise ValueError("Panels must have non-zero length.\n"+
+                             "Your endpoints are on top of each other.")
+
 
     def velocity(self, x, y):
         """Compute the velocity induced by the panel
@@ -62,16 +71,16 @@ class Panel(object):
         Outputs:
         u,v   -- the x and y components of the velocity
 
-        Examples:
+        Example:
         p_2 = vp.Panel(0,-1,0,1,4)        # make panel on y-axis with gamma=4
         u,v = p_2.velocity(-1,0)          # get induced velocity on x-axis
         """
         if self._gamma[1]-self._gamma[0]: # non-constant gamma
-            u0,v0,u1,v1 = self.linear(x,y)
+            u0,v0,u1,v1 = self._linear(x,y)
             return (self._gamma[0]*u0+self._gamma[1]*u1,
                     self._gamma[0]*v0+self._gamma[1]*v1)
         else:
-            u,v = self.constant(x,y)     # constant gamma
+            u,v = self._constant(x,y)     # constant gamma
             return self.gamma*u,self.gamma*v
 
     def plot(self, style='k'):
@@ -80,18 +89,18 @@ class Panel(object):
         Inputs:
         style -- a string defining the matplotlib style
 
-        Examples:
+        Example:
         my_panel = vp.Panel(0,-1,0,1)  # creates panel on y-axis
         my_panel.plot()                # plot the panel
         """
         return plt.plot(self.x, self.y, style, lw=2)
 
-    def constant(self, x, y):
+    def _constant(self, x, y):
         "Constant panel induced velocity"
         lr, dt, _, _ = self._transform_xy(x, y)
         return self._rotate_uv(-dt*0.5/np.pi, -lr*0.5/np.pi)
 
-    def linear(self, x, y):
+    def _linear(self, x, y):
         "Linear panel induced velocity"
         lr, dt, xp, yp = self._transform_xy(x, y)
         g, h, c = (yp*lr+xp*dt)/self.S, (xp*lr-yp*dt)/self.S+2, 0.25/np.pi
@@ -122,7 +131,7 @@ class PanelArray(object):
     alpha  -- the flow angle of attack
     """
 
-    def __init__(self, panels):
+    def __init__(self, panels, closed=True):
         """Initialize a PanelArray
 
         Inputs:
@@ -136,6 +145,14 @@ class PanelArray(object):
         n = len(panels)
         self.bodies = [(0,n)]        # range for a body
         self.left = [n-1]+list(range(n-1)) # index to the left
+
+        # compute area for closed PanelArrays
+        if closed:
+            yc, S, sx = self.get_array('yc','S','sx')
+            self.area = sum(sx*yc*2.*S)
+            if self.area<1e-5: # check body area
+                raise ValueError("A closed PanelArray must have positive area.\n"+
+                                 "Check that your panels wrap clockwise.")
 
     ### Flow solver
 
@@ -155,7 +172,7 @@ class PanelArray(object):
         Outputs:
         gamma of the PanelArray is updated.
 
-        Examples:
+        Example:
         foil = vp.make_jfoil(N=32)                    # make a Panel array
         foil.solve_gamma(alpha=0.1, kutta=[(0,-1)])      # solve for gamma
         foil.plot_flow()                                 # plot the flow
@@ -203,8 +220,8 @@ class PanelArray(object):
         # construct the matrix
         A = np.empty((len(xc), len(xc)))      # empty matrix
         for j, p_j in enumerate(self.panels): # loop over panels
-            fx,fy = p_j.constant(xc,yc)           # f_j at all panel centers
-            A[:,j] = fx*sx+fy*sy                   # tangential component
+            fx,fy = p_j._constant(xc,yc)           # f_j at all panel centers
+            A[:,j] = fx*sx+fy*sy                  # tangential component
         np.fill_diagonal(A,0.5)               # fill diagonal with 1/2
 
         # construct the RHS
@@ -220,9 +237,9 @@ class PanelArray(object):
         # construct the matrix
         A = np.zeros((len(xc), len(xc)))         # empty matrix
         for j, p_j in enumerate(self.panels):    # loop over panels
-            u0,v0,u1,v1 = p_j.linear(xc,yc)        # f_j at all panel centers
-            A[:,self.left[j]] += -u0*sy+v0*sx       # -S end influence
-            A[:,j] += -u1*sy+v1*sx                  # +S end influence
+            fx0,fy0,fx1,fy1 = p_j._linear(xc,yc)     # f_j at all panel ends
+            A[:,self.left[j]] += -fx0*sy+fy0*sx     # -S end influence
+            A[:,j] += -fx1*sy+fy1*sx                # +S end influence
 
         # construct the RHS
         b = np.cos(self.alpha)*sy-np.sin(self.alpha)*sx
@@ -244,7 +261,7 @@ class PanelArray(object):
         Outputs:
         plot of the flow vectors, velocity magnitude contours, and the panels.
 
-        Examples:
+        Example:
         circle = vp.make_circle(N=32)      # make a Panel array
         circle.solve_gamma(alpha=0.1)      # solve for Panel strengths
         circle.plot_flow()                 # plot the flow
@@ -273,17 +290,22 @@ class PanelArray(object):
         # plot panels
         self.plot();
 
-    def plot(self, style='k'):
+    def plot(self, style='k', nlabel=0):
         """Plot the PanelArray panels
 
         Inputs:
         style -- a string defining the matplotlib style
+        nlabel -- add every 'nlabel' panel index labels
 
-        Examples:
+        Example:
         circle = vp.make_circle(N=32) # make a circle PanelArray
         circle.plot(style='o-')       # plot the geometry
         """
-        for p in self.panels: p.plot(style)
+        for i,p_i in enumerate(self.panels):
+            p_i.plot(style)
+            if nlabel>0 and i%nlabel == 0:
+                x,y = p_i.xc-0.1*p_i.sy,p_i.yc+0.1*p_i.sx
+                plt.text(x,y,i,fontsize=12,horizontalalignment='center',verticalalignment='center')
 
     def velocity(self,x,y):
         "Velocity at (x,y) induced by the free stream and PanelArray"
@@ -311,7 +333,7 @@ class PanelArray(object):
         Outputs:
         key_vals     -- np arrays filled with the named attributes
 
-        Examples:
+        Example:
         circle = vp.make_circle(N=32)           # make a PanelArray
         xc,yc = circle.get_array('xc','yc')     # get arrays of the panel centers
         """
@@ -326,9 +348,9 @@ class PanelArray(object):
         Notes:
         s[0] = S[0], s[1] = 2*S[0]+S[1], s[2] = 2*S[0]+2*S[1]+S[2], ...
 
-        Examples:
-        foil = vp.make_jfoil(N=64)       # define the geometry
-        s = foil.distance()                 # get the panel path distance
+        Example:
+        foil = vp.make_jfoil(N=64)   # define the geometry
+        s = foil.distance()          # get the panel path distance
         """
         S = self.get_array('S')
         return np.cumsum(2*S)-S
@@ -342,15 +364,20 @@ class PanelArray(object):
         top     -- PanelArray defining the top BL
         bottom  -- PanelArray defining the bottom BL
 
-        Examples:
+        Example:
         foil = vp.make_jfoil(N=64)        #1. Define the geometry
-        foil.solve_gamma_kutta(alpha=0.1)    #2. Solve for the potential flow
-        foil_top,foil_bot = foil.split()     #3. Split the boundary layers
+        foil.solve_gamma_kutta(alpha=0.1) #2. Solve for the potential flow
+        foil_top,foil_bot = foil.split()  #3. Split the boundary layers
         """
+        # roll the panel index to a stagnation point
+        gamma = self.get_array('gamma')
+        i = max(np.argmax(gamma<0),np.argmax(gamma>0))
+        rolled = np.roll(self.panels,-i)
         # split based on flow direction
-        top = [p for p in self.panels if p.gamma<=0]
-        bot = [p for p in self.panels if p.gamma>=0]
-        return PanelArray(top),PanelArray(bot[::-1])
+        top = [p for p in rolled if p.gamma<=0]
+        bot = [p for p in rolled if p.gamma>=0]
+        closed = False # split arrays don't make closed loops
+        return PanelArray(top,closed),PanelArray(bot[::-1],closed)
 
     def thwaites(self):
         """ Wrapper for BoundaryLayer.thwaites
@@ -371,7 +398,7 @@ class PanelArray(object):
         Outputs:
         x_s,y_s -- location of the boundary layer separation point
 
-        Examples:
+        Example:
         circle = vp.make_circle(N=32)  #1. make the geometry
         circle.solve_gamma_O2()        #2. solve the pflow
         top,bottom = circle.split()    #3. split the panels
@@ -379,7 +406,7 @@ class PanelArray(object):
         """
         _,_,iSep = self.thwaites()            # only need iSep
         x,y = self.get_array('xc','yc')       # panel centers
-        return bl.sep(x,iSep),bl.sep(y,iSep)  # interpolate 
+        return bl.sep(x,iSep),bl.sep(y,iSep)  # interpolate
 
 ### Geometries
 
@@ -391,6 +418,10 @@ def panelize(x,y):
 
     Outputs:
     A PanelArray object
+
+    Note:
+    The first and last point should match for a
+    closed shape.
     """
     if len(x)<2:         # check input lengths
         raise ValueError("point arrays must have len>1")
@@ -449,7 +480,7 @@ def make_jfoil(N, xcen=-0.1, ycen=0):
     Outputs:
     A PanelArray object; see help(PanelArray)
 
-    Examples:
+    Example:
     foil = vp.make_jfoil(N=34)  # make
     foil.plot()                 # plot
     """
@@ -462,6 +493,39 @@ def make_jfoil(N, xcen=-0.1, ycen=0):
     # apply jukowski mapping and panelize
     r2 = x**2+y**2
     return panelize(x*(1+1/r2)/2,y*(1-1/r2))
+
+def _spline(N,x,y,per=True):
+    from scipy import interpolate
+    tck, u = interpolate.splprep([x, y], s=0, per=per)
+    unew = np.linspace(0, 1, N)
+    return interpolate.splev(unew, tck)
+
+def make_spline(N,x,y,sharp=False):
+    """Make PanelArray using splines
+
+    Note:
+    A closed spline is fit through the coordinates.
+    The spline may oscillate between the coords,
+    so the output needs to be checked carefully.
+
+    Inputs:
+    N     -- number of panels to use
+    x,y   -- body coordinate lists
+    sharp -- sharp corner between panel 0 and N-1?
+
+    Outputs:
+    A PanelArray object; see help(PanelArray)
+
+    Example:
+    x = [1,0,-0.5,-1,-0.5,0,1]      # x coords
+    y = [0,-.2,-.2,0,.2,.2,0]       # y coords
+    plt.plot(x,y,'x',markersize=20) # plot coords
+    geom = vp.make_spline(20,x,y)   # fit 20 panels
+    geom.plot('-o')                 # plot panels
+    """
+    xi,yi = _spline(N+1,x,y,per=not sharp)
+    return panelize(xi,yi)
+
 
 def concatenate(a,b,*args):
     """Concatenate PanelArray bodies
