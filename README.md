@@ -18,6 +18,7 @@ Teaching numerical hydrodynamics with [Jupyter notebooks](http://jupyter.org/) w
 
 #### Introduction
 * [Quick Python Intro](http://nbviewer.ipython.org/urls/github.com/weymouth/MarineHydro/blob/master/notebooks/0_0_QuickPythonIntro.ipynb)
+* [Introduction on Numerical Python for Engineers](https://github.com/weymouth/NumericalPython) - external github page.
 
 #### Numerical methods
 1. [Vortex panel solution method](http://nbviewer.ipython.org/urls/github.com/weymouth/MarineHydro/blob/master/notebooks/3_1_SolutionMethod.ipynb)
