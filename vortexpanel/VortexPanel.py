@@ -410,7 +410,7 @@ class PanelArray(object):
 
 ### Geometries
 
-def panelize(x,y):
+def panelize(x,y, closed=True):
     """Create a PanelArray from a set of points
 
     Inputs:
@@ -428,7 +428,7 @@ def panelize(x,y):
     if len(x)!=len(y):   # check input lengths
         raise ValueError("x and y must be same length")
     return PanelArray([Panel(x[i], y[i], x[i+1], y[i+1])
-                for i in range(len(x)-1)])
+                for i in range(len(x)-1)],closed)
 
 def make_ellipse(N, t_c, xcen=0, ycen=0):
     """ Make an elliptical PanelArray; defaults to circle
