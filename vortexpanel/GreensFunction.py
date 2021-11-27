@@ -12,14 +12,12 @@ def wave_source(x,y,xs,ys,K):
   fZ = np.real(eZ*exp1(Z))   # standing wave potential
   return 0.5*np.log(r2)-0.5*np.log(m2)-2j*np.pi*eZ-2*fZ
 
-
-gr = 0.5*(1+np.sqrt(1/3)) # gauss-quad sample point
+GAUSS2 = 0.5*(1+np.sqrt(1/3)) # gaussian-quadrature sample point
 def potential(x,y,x0,y0,x1,y1,G=source,args=()):
   "Gaussian quadrature estimate of the potential influence function"
-  def func(xs,ys): return G(x,y,xs,ys,*args)
+  def dG(s): return G(x,y,x0*(1-s)+x1*s,y0*(1-s)+y1*s,*args)
   h = np.sqrt((x1-x0)**2+(y1-y0)**2)
-  return 0.5*h*(func(x0*gr+x1*(1-gr),y0*gr+y1*(1-gr))+
-                func(x0*(1-gr)+x1*gr,y0*(1-gr)+y1*gr))
+  return 0.5*h*sum(dG(s) for s in [GAUSS2,1-GAUSS2])
 
 def velocity(x,y,x0,y0,x1,y1,G=source,args=(),eps=1e-6):
   "Finite difference estimate of the velocity influence function"
