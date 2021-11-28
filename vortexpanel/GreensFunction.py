@@ -1,8 +1,8 @@
-from scipy.special import exp1
 import numpy as np
 
 def source(x,y,xs,ys): return 0.5*np.log((x-xs)**2+(y-ys)**2)
 
+from scipy.special import exp1
 def wave_source(x,y,xs,ys,K):
   "Source plus generated free surface waves"
   r2 = (x-xs)**2+(y-ys)**2   # source square-distance
@@ -10,7 +10,7 @@ def wave_source(x,y,xs,ys,K):
   Z = K*(y+ys+1j*abs(x-xs))  # wave number scaled complex vector
   eZ = np.exp(Z)             # propagating wave potential
   fZ = np.real(eZ*exp1(Z))   # standing wave potential
-  return 0.5*np.log(r2)-0.5*np.log(m2)-2j*np.pi*eZ-2*fZ
+  return 0.5*np.log(r2/m2)-2j*np.pi*eZ-2*fZ
 
 GAUSS2 = 0.5*(1+np.sqrt(1/3)) # gaussian-quadrature sample point
 def potential(x,y,x0,y0,x1,y1,G=source,args=()):
