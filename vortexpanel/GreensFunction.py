@@ -53,10 +53,10 @@ def added_mass(y,z,G=source,args=(),rho=1):
   qy = np.linalg.solve(A,ny)
   qz = np.linalg.solve(A,nz)
 
-  # potential (times length)
+  # potential due to y,z motion (times panel width)
   yc,zc,_,_,h = properties(y[:-1], z[:-1], y[1:], z[1:])
   B = [h*potential(yc,zc,y[i],z[i],y[i+1],z[i+1],G,args) for i in range(len(yc))]
   phiy,phiz = B@qy,B@qz # multiply potential influence matrix by strength
 
-  # sum over panels for each added mass coefficient
+  # sum over panels
   return -rho*np.matrix([[phiy@ny,phiy@nz],[phiz@ny,phiz@nz]])
