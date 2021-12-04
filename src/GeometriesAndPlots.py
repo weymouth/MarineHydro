@@ -7,19 +7,16 @@ if module_path not in sys.path:
 from src.GreensFunction import *
 import numpy as np
 
-# Geometry creation functions
+# Geometry creation/measurement functions
 
 def ellipse(N,a=1,b=1,theta1=np.pi):
   "x,y arrays around an elliptical arc"
   theta = np.linspace(-np.pi,theta1,N+1) # N+1 points for N panels
   return a*np.cos(theta),b*np.sin(theta)
 
-def circle_cat(N,g):
-  ya,za = ellipse(N//2,theta1=0)
-  yb,zb = ellipse(N//2,theta1=0)
-  ya += 1+g
-  yb -= 1+g
-  return np.append(ya,yb),np.append(za,zb),[N//2]
+def area(x,y):
+    "Calculate the area of a polygon from an array of points"
+    return np.trapz(x,y)
 
 # Visualization functions
 
