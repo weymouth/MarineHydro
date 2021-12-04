@@ -12,7 +12,9 @@ These notebooks assume the student is already familiar with Python. Please revie
 
 ## Assignments
 
-1. TBC
+1. Computing roll flows and forces with panel methods:
+    * A. [Roll added-inertia](https://github.com/weymouth/MarineHydro/master/notebooks/asignment1a.ipynb)
+    * B. [Roll wave damping](https://github.com/weymouth/MarineHydro/master/notebooks/asignment1b.ipynb)
 
 ---
 Teaching numerical hydrodynamics with [Jupyter notebooks](http://jupyter.org/) was inspired by [AeroPython](https://github.com/barbagroup/AeroPython) developed by [Lorena Barba](http://lorenabarba.com/). The materials are distributed publicly and openly under a Creative Commons Attribution license, [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
