@@ -1,4 +1,10 @@
-from GreensFunction import *
+import os
+import sys
+module_path = os.path.abspath(os.path.join('..'))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
+from src.GreensFunction import *
 import numpy as np
 
 # Geometry creation functions

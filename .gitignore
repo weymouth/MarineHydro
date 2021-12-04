@@ -1,7 +1,5 @@
 .ipynb_checkpoints/
-
-lessons/.ipynb_checkpoints/
-
 **/*~
 
 *.pyc
+notebooks/roll.ipynb
