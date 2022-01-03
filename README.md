@@ -9,7 +9,7 @@ These notebooks assume the student is already familiar with Python. Please revie
 ## Notebook list
 
 1. [Panel methods](https://colab.research.google.com/github/weymouth/MarineHydro/blob/master/notebooks/panel_method.ipynb)
-1. [Wave Greens Function](https://colab.research.google.com/github/weymouth/MarineHydro/blob/master/notebooks/wave_greens_function.ipynb)
+1. [Wave Greens Function](https://colab.research.google.com/github/weymouth/MarineHydro/blob/master/notebooks/water_waves.ipynb)
 
 ## Assignments
 
