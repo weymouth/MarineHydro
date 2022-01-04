@@ -73,16 +73,15 @@ def plot_flow(x,y,q,XY,G=source,args=(),size=(7,7),ymax=None):
   # Loop through segments, superimposing the velocity
   def uv(i): return q[i]*velocity(*XY, x[i], y[i], x[i+1], y[i+1], G, args)
   UV = sum(uv(i) for i in range(len(x)-1))
+  UV /= np.linalg.norm(UV) # normalize
 
   # Create plot
   plt.figure(figsize=size)
   ax=plt.axes(); ax.set_aspect('equal', adjustable='box')
 
   # Plot vectors and segments
-  Q = plt.quiver(*XY, *np.real(UV))
-  if np.iscomplexobj(UV):
-    Q._init() 
-    plt.quiver(*XY, *np.imag(UV), scale=Q.scale, color='g')
+  plt.quiver(*XY, *np.real(UV), scale = 1)
+  plt.quiver(*XY, *np.imag(UV), scale = 1, color='g')
   plt.plot(x,y,c='b')
   plt.ylim(None,ymax)
 
