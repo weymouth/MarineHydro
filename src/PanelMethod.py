@@ -23,7 +23,7 @@ def properties(x0, y0, x1, y1):
   nx, ny = sy/h, -sx/h          # segment unit normal
   return xc, yc, nx, ny, h
 
-def construct_A(x,y,G=source,args=(),aii=np.pi):
+def construct_A(x,y,G=source,args=()):
   "construct the velocity influence matrix"
   # influence of panel i on the normal velocity at each panel center
   xc, yc, nx, ny, _ = properties(x[:-1], y[:-1], x[1:], y[1:])
@@ -33,7 +33,7 @@ def construct_A(x,y,G=source,args=(),aii=np.pi):
 
   # construct matrix
   A = np.array([u_n(i) for i in range(len(yc))]).T
-  A += aii*np.eye(len(yc)) # add panel self-influence
+  A += np.pi*np.eye(len(yc)) # add panel self-influence
   return A,nx,ny
 
 def added_mass(y,z,G=source,args=(),rho=1):
@@ -88,5 +88,4 @@ def plot_flow(x,y,q,XY,G=source,args=(),size=(7,7),ymax=None):
 
 def mask_grid(x,y,mask):
   "delete mesh points where mask is true"
-  def delete(a): return np.ma.masked_array(a,mask(x,y)).compressed()
-  return np.array((delete(x),delete(y)))
+  return np.array((x[~mask(x,y)],y[~mask(x,y)]))
