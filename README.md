@@ -8,8 +8,8 @@ These notebooks assume the student is already familiar with Python. Please revie
 
 ## Notebook list
 
-1. [Panel methods](https://colab.research.google.com/github/weymouth/MarineHydro/blob/master/notebooks/panel_method.ipynb)
-1. [Water Waves](https://colab.research.google.com/github/weymouth/MarineHydro/blob/master/notebooks/water_waves.ipynb)
+1. Panel Methods ([Notebook viewer](http://nbviewer.ipython.org/urls/github.com/weymouth/MarineHydro/blob/master/notebooks/panel_method.ipynb), [Open in Colab](https://colab.research.google.com/github/weymouth/MarineHydro/blob/master/notebooks/panel_method.ipynb))
+1. Water Waves ([Notebook viewer](http://nbviewer.ipython.org/urls/github.com/weymouth/MarineHydro/blob/master/notebooks/water_waves.ipynb), [Open in Colab](https://colab.research.google.com/github/weymouth/MarineHydro/blob/master/notebooks/water_waves.ipynb))
 
 ## Assignments
 
