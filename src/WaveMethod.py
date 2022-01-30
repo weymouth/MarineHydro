@@ -19,7 +19,7 @@ def wave_source(x,y,xs,ys,K):
 
 from matplotlib.animation import FuncAnimation
 
-def wave_video(x,y,q,XY,G=wave_source,args=(4,),size=(16,6)):
+def wave_video(x,y,q,XY,G=wave_source,args=(4,),size=(16,6),ymax=0.5):
   "Animate the induced flow over a cycle of motion"
   # Get complex velocity
   def uv(i): return q[i]*velocity(*XY, x[i], y[i], x[i+1], y[i+1], G, args)
@@ -29,7 +29,7 @@ def wave_video(x,y,q,XY,G=wave_source,args=(4,),size=(16,6)):
   fig, ax = plt.subplots(1,1,figsize=size)
   Q = ax.quiver(*XY, *UV)#, pivot='mid')
   ax.plot(x,y,c='b')
-  ax.set_ylim(None,0.5)
+  ax.set_ylim(None,ymax)
   ax.set_aspect('equal', adjustable='box')
   plt.close()
 
@@ -40,3 +40,6 @@ def wave_video(x,y,q,XY,G=wave_source,args=(4,),size=(16,6)):
 
   # create the animation
   return FuncAnimation(fig, update_quiver, fargs=(Q,), interval=50)
+
+def flow_video(x,y,q,XY,G=source,args=(),size=(12,8),ymax=None):
+  return wave_video(x,y,q,XY,G,args,size,ymax)
