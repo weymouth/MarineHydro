@@ -1,11 +1,6 @@
-import os
-import sys
-module_path = os.path.abspath(os.path.join('..'))
-if module_path not in sys.path:
-    sys.path.append(module_path)
-from src.PanelMethod import *
+url = 'https://raw.githubusercontent.com/weymouth/MarineHydro/master/src/PanelMethod.py'
+exec(requests.get(url).content)
 
-import numpy as np
 from scipy.special import exp1
 
 def wave_source(x,y,xs,ys,K):
